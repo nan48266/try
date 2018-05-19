@@ -1,0 +1,155 @@
+public class MyPubCol
+    {
+        public string colName { get; set; }
+        public ControlViewModel[] Controls { get; set; }
+    }
+//below not needed
+    public class MyViewModel
+    {
+        public ControlViewModel[] Controls { get; set; }
+    }
+    public abstract class ControlViewModel
+    {
+        public abstract string Type { get; }
+        public bool Visible { get; set; }
+        public string Label { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class TextBoxViewModel : ControlViewModel
+    {
+        public override string Type
+        {
+            get { return "textbox"; }
+        }
+        public string Value { get; set; }
+    }
+    public class LabelViewModel : ControlViewModel
+    {
+        public override string Type
+        {
+            get { return "lbl"; }
+        }
+        public string Value { get; set; }
+    }
+
+    public class CheckBoxViewModel : ControlViewModel
+    {
+        public override string Type
+        {
+            get { return "checkbox"; }
+        }
+        public bool Value { get; set; }
+    }
+
+    public class DropDownListViewModel : TextBoxViewModel
+    {
+        public override string Type
+        {
+            get { return "ddl"; }
+        }
+        public SelectList Values { get; set; }
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ public class ControlModelBinder : DefaultModelBinder
+    {
+        protected override object CreateModel(ControllerContext controllerContext, ModelBindingContext bindingContext, Type modelType)
+        {
+            var type = bindingContext.ValueProvider.GetValue(bindingContext.ModelName + ".Type");
+            object model = null;
+            switch (type.AttemptedValue)
+            {
+                case "textbox":
+                    {
+                        model = new TextBoxViewModel();
+                        break;
+                    }
+                case "checkbox":
+                    {
+                        model = new CheckBoxViewModel();
+                        break;
+                    }
+                case "ddl":
+                    {
+                        model = new DropDownListViewModel();
+                        break;
+                    }
+                case "lbl":
+                    {
+                        model = new LabelViewModel();
+                        break;
+                    }
+                default:
+                    {
+                        throw new NotImplementedException();
+                    }
+            };
+
+            bindingContext.ModelMetadata = ModelMetadataProviders.Current.GetMetadataForType(() => model, model.GetType());
+            return model;
+        }
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@model List<WebApplication1.Controllers.MyPubCol> 
+
+@using (Html.BeginForm())
+{
+ 
+    <table class="table table-bordered table-responsive table-hover">
+        <tr>
+        @for (int iii = 0; iii < Model.Count(); iii++)
+        {
+
+            <th>@Model[iii].colName
+                @Html.HiddenFor(x => x[iii].colName)
+            </th>
+       
+
+        }
+        </tr>
+        @for (int ii = 0; ii < Model.Count(); ii++)
+        {
+            <tr>
+                @for (int i = 0; i < Model[ii].Controls.Length; i++)
+                {
+
+                <td>
+
+                    @Html.HiddenFor(x => x[ii].Controls[i].Type)
+                    @Html.HiddenFor(x => x[ii].Controls[i].Name)
+                    @Html.EditorFor(x => x[ii].Controls[i])
+                </td>
+
+                }
+            </tr>
+        }
+    </table>
+    <input type="submit" value="OK" />
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////EditorTemplates shared
+
+CheckBoxViewModel.cshtml
+
+@model WebApplication1.Controllers.CheckBoxViewModel
+@Html.CheckBoxFor(x => x.Value)
+@Html.LabelFor(x => x.Value, Model.Label)
+
+DropDownListViewModel.cshtml
+@model WebApplication1.Controllers.DropDownListViewModel
+@Html.LabelFor(x => x.Value, Model.Label)
+@Html.DropDownListFor(x => x.Value, Model.Values)
+
+LabelViewModel.cshtml
+@model WebApplication1.Controllers.LabelViewModel
+@Html.Label("")
+
+TextBoxViewModel.cshtml
+@model WebApplication1.Controllers.TextBoxViewModel
+@Html.LabelFor(x => x.Value, Model.Label)
+@Html.TextBoxFor(x => x.Value)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ModelBinders.Binders.Add(typeof(ControlViewModel), new ControlModelBinder());
+
