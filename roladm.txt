@@ -1,0 +1,63 @@
+<table>
+    @for (int i = 0; i < Model.Count(); i++)
+    {
+        <tr>
+            <td>
+                @Html.HiddenFor(m => m[i].id)
+            </td>
+            <td>
+                @Html.LabelFor(m => m[i].grpname)
+            </td>
+            <td>
+                @Html.CheckBoxFor(m => m[i].isadmin)
+            </td>
+            <td>
+                @Html.CheckBoxFor(m => m[i].ispoweruser)
+            </td>     
+            <td>
+                @Html.CheckBoxFor(m => m[i].isreadonly)
+            </td>
+            <td>
+                <input type="submit" value="View Details" id="up_@i" class="save-user"/>
+            </td> 
+        </tr>
+    }
+
+</table>
+<script type="text/javascript">
+
+    $(function () {
+       
+
+        $('.save-user').on('click', function () {
+            
+            var iii = $(this).attr('id');
+            var realid=iii.replace("up_", "");
+            var tr = $(this).parents('tr:first');
+            var id = tr[0];            
+            var Name = tr.find("input[name*='id']").val();
+            debugger;
+            var SurName = tr.find("#SurName").val();
+            var UserID = tr.find("#UserID").html();
+            tr.find("#lblName").text(Name);
+            tr.find("#lblSurName").text(SurName);
+            tr.find('.edit-mode, .display-mode').toggle();
+            var UserModel =
+            {
+                "ID": UserID,
+                "Name": Name,
+                "SurName": SurName
+            };
+            $.ajax({
+                url: '/User/ChangeUser/',
+                data: JSON.stringify(UserModel),
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    alert(data);
+                }
+            });
+
+        });
+    })
+</script> 
